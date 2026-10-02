@@ -3,27 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zolpai.com</title>
+<title>Zolpai.com - Loading...</title>
+<!-- এই লাইনটি জিরো সেকেন্ডের মধ্যে ভিজিটরকে আপনার সচল সাইটে পাঠিয়ে দেবে -->
+<meta http-equiv="refresh" content="0; url=https://zolpai.free.nf/">
+<script>
+  // অতিরিক্ত নিশ্চয়তার জন্য জাভাস্ক্রিপ্ট রিডাইরেক্ট
+  window.location.replace("https://zolpai.free.nf/");
+</script>
 <style>
-  /* মার্জিন ও প্যাডিং জিরো করে ফুলস্ক্রিন করা হয়েছে */
-  body, html {
+  body {
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
     margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden; 
+    font-family: sans-serif;
   }
-  /* ফ্রেমের বর্ডার বাদ দিয়ে পুরো স্ক্রিন জুড়ে দেওয়া হয়েছে */
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
+  .loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #16a34a;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
   }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-
-  <!-- আপনার InfinityFree এর সাইটটি এখানে লোড হবে -->
-  <iframe src="https://zolpai.free.nf/" title="Zolpai Store"></iframe>
-
+  <div class="loader"></div>
+  <h2 style="color: #16a34a; margin-bottom: 5px;">Zolpai.com</h2>
+  <p style="color: #6b7280; font-size: 14px;">আপনাকে মূল ওয়েবসাইটে নিয়ে যাওয়া হচ্ছে...</p>
 </body>
 </html>
