@@ -21,6 +21,11 @@ const DEFAULT_PROFIT = 20; // বাকি সব প্রোডাক্টে
 
 // আপনার হোয়াটসঅ্যাপ নম্বর
 const WHATSAPP_NUMBER = "8801602100492"; 
+
+// Dumkol API Credentials
+const API_KEY = "dumkol_key_a3SsiDLJLIKaKdPV";
+const API_SECRET = "dumkol_sec_BfCYnfv70oYQFRC6JqJM5CjhAB6uojHN";
+const API_URL = "https://www.dumkol.com/api/product"; 
 </script>
 
 <header class="bg-white shadow sticky top-0 z-50">
@@ -40,10 +45,19 @@ let allProducts=[];
 
 async function load(){
   try{
-    // ফায়ারবেস থেকে আপনার ফ্রি হোস্টিংয়ের api.php তে রিকোয়েস্ট পাঠানো হচ্ছে
-    const res = await fetch('https://zolpai.free.nf/api.php');
+    // ফায়ারবেস থেকে ডেটা আনার জন্য অল্টারনেটিভ প্রক্সি
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(API_URL);
 
-    if(!res.ok) throw new Error("সার্ভার থেকে সঠিক রেসপন্স আসেনি!");
+    const res = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Api-Key': API_KEY,
+        'Api-Secret-Key': API_SECRET
+      }
+    });
+
+    if(!res.ok) throw new Error("নেটওয়ার্ক রেসপন্স ঠিক নেই!");
 
     const json = await res.json();
     
@@ -56,7 +70,7 @@ async function load(){
     document.getElementById('loading').style.display='none';
     render(allProducts);
   }catch(e){
-    document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold">Error: '+e.message+'</span>';
+    document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold">Error: '+e.message+'<br><span class="text-sm text-gray-500">(প্রক্সি বা CORS এরর হতে পারে)</span></span>';
   }
 }
 
@@ -72,7 +86,6 @@ function render(list){
     const myPrice = Math.round(original * (1 + percent/100));
     const catName = p.category_name || 'পণ্য';
     
-    // নামের মধ্যে থাকা কোটেশন চিহ্নগুলো সরিয়ে দেওয়া হচ্ছে যেন বাটনের কোড ব্রেক না করে
     const cleanName = (p.name || '').replace(/'/g, "").replace(/"/g, "");
 
     return `<div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100 overflow-hidden group">
@@ -95,14 +108,12 @@ function render(list){
   }).join('');
 }
 
-// হোয়াটসঅ্যাপে মেসেজ পাঠানোর ফাংশন
 function orderProduct(productName, price) {
   const message = `হ্যালো, আমি আপনাদের সাইট থেকে একটি অর্ডার করতে চাই:\n\nপণ্য: ${productName}\nদাম: ৳${price}`;
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   window.open(whatsappUrl, '_blank');
 }
 
-// প্রোডাক্ট খোঁজার অপশন
 document.getElementById('searchBox').addEventListener('input', e=>{
   const q=e.target.value.toLowerCase();
   render(allProducts.filter(p=>p.name.toLowerCase().includes(q)));
