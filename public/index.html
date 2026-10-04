@@ -11,62 +11,108 @@
 <body class="bg-gray-50">
 
 <script>
-// ★★★ এখানে আলাদা আলাদা লাভ দাও ★★★
+// লাভের পরিমাণ
 const PROFIT_BY_ID = {
-  1: 10,   // ID 1 এ 10%
-  2: 100,  // ID 2 এ 100%
-  5: 3,    // ID 5 এ 3%
+  1: 10,   
+  2: 100,  
+  5: 3,    
 };
-const DEFAULT_PROFIT = 20; // বাকি সব প্রোডাক্টে 20%
+const DEFAULT_PROFIT = 20; 
+
+// আপনার হোয়াটসঅ্যাপ নম্বর
+const WHATSAPP_NUMBER = "8801602100492"; 
+
+// Dumkol API Credentials
+const API_KEY = "dumkol_key_a3SsiDLJLIKaKdPV";
+const API_SECRET = "dumkol_sec_BfCYnfv70oYQFRC6JqJM5CjhAB6uojHN";
 </script>
 
 <header class="bg-white shadow sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
     <h1 class="text-2xl font-black text-green-600">Zolpai<span class="text-orange-500">.com</span></h1>
-    <input id="searchBox" placeholder="খুঁজুন..." class="border rounded-full px-4 py-2 text-sm w-44 md:w-80">
+    <input id="searchBox" placeholder="খুঁজুন..." class="border border-gray-300 rounded-full px-4 py-2 text-sm w-44 md:w-80 outline-none">
   </div>
 </header>
 
 <main class="max-w-7xl mx-auto px-4 py-6">
-  <div id="loading" class="text-center py-20">লোড হচ্ছে...</div>
+  <div id="loading" class="text-center py-20 font-semibold text-gray-500">লোড হচ্ছে...</div>
   <div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
 </main>
 
 <script>
 let allProducts=[];
+
 async function load(){
   try{
-    const res = await fetch('api.php'); // নিজের সার্ভার থেকে লোড হবে, CORS হবে না
+    // সরাসরি ধুমকলের সার্ভারে রিকোয়েস্ট (কোনো প্রক্সি ছাড়া)
+    const res = await fetch('https://www.dumkol.com/api/product', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Api-Key': API_KEY,
+        'Api-Secret-Key': API_SECRET
+      }
+    });
+    
+    if(!res.ok) throw new Error("সার্ভার রেসপন্স ঠিক নেই (CORS Blocked হতে পারে)");
+    
     const json = await res.json();
-    allProducts = json.data || [];
+    
+    if(json.result === true) {
+      allProducts = json.data || [];
+    } else {
+      throw new Error(json.message || "API থেকে ডেটা আসেনি");
+    }
+    
     document.getElementById('loading').style.display='none';
     render(allProducts);
   }catch(e){
-    document.getElementById('loading').innerHTML = 'Error: '+e.message;
+    document.getElementById('loading').innerHTML = '<span class="text-red-500">Error: ' + e.message + '</span>';
   }
 }
+
 function render(list){
+  if(list.length === 0) {
+    document.getElementById('grid').innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">কোনো পণ্য পাওয়া যায়নি</div>';
+    return;
+  }
+
   document.getElementById('grid').innerHTML = list.map(p=>{
     const original = parseFloat(p.price||0);
     const percent = PROFIT_BY_ID[p.id] !== undefined ? PROFIT_BY_ID[p.id] : DEFAULT_PROFIT;
     const myPrice = Math.round(original * (1 + percent/100));
+    
+    const catName = p.category_name || 'পণ্য';
+    const cleanName = (p.name || '').replace(/'/g, "").replace(/"/g, "");
+
     return `<div class="bg-white rounded-2xl shadow border overflow-hidden">
-      <img src="${p.thumbnail_image}" class="h-52 w-full object-cover">
+      <img src="${p.thumbnail_image || 'https://via.placeholder.com/300'}" class="h-52 w-full object-cover">
       <div class="p-3">
-        <p class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full w-fit">${p.category_name} • +${percent}%</p>
+        <p class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full w-fit">${catName} • +${percent}%</p>
         <h3 class="font-semibold text-sm mt-1 h-10 line-clamp-2">${p.name}</h3>
         <div class="flex justify-between items-center mt-3">
-          <div><p class="font-bold text-lg text-green-600">৳${myPrice}</p><p class="text-xs line-through text-gray-400">৳${original}</p></div>
-          <button class="bg-orange-500 text-white px-4 py-1 rounded-full text-xs">Buy</button>
+          <div>
+            <p class="font-bold text-lg text-green-600">৳${myPrice}</p>
+            <p class="text-xs line-through text-gray-400">৳${original}</p>
+          </div>
+          <button onclick="orderProduct('${cleanName}', ${myPrice})" class="bg-orange-500 text-white px-4 py-1.5 rounded-full text-xs font-bold">অর্ডার</button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
+
+function orderProduct(productName, price) {
+  const message = `হ্যালো, আমি আপনাদের সাইট থেকে একটি অর্ডার করতে চাই:\n\nপণ্য: ${productName}\nদাম: ৳${price}`;
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank');
+}
+
 document.getElementById('searchBox').addEventListener('input', e=>{
   const q=e.target.value.toLowerCase();
   render(allProducts.filter(p=>p.name.toLowerCase().includes(q)));
 });
+
 load();
 </script>
 </body>
