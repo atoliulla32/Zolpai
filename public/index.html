@@ -11,31 +11,31 @@
 <body class="bg-gray-50">
 
 <script>
-// ★★★ এখানে আলাদা আলাদা লাভ দাও ★★★
+// ★★★ এখানে আলাদা আলাদা লাভ দিন ★★★
 const PROFIT_BY_ID = {
   1: 10,   
   2: 100,  
   5: 3,    
 };
-const DEFAULT_PROFIT = 20; 
+const DEFAULT_PROFIT = 20; // বাকি সব প্রোডাক্টে 20% লাভ
 
 // আপনার হোয়াটসঅ্যাপ নম্বর
 const WHATSAPP_NUMBER = "8801602100492"; 
 
-// ★★★ আপনার গুগল স্ক্রিপ্ট লিংক ★★★
+// ★★★ আপনার আজীবন ফ্রি গুগল স্ক্রিপ্ট লিংক ★★★
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNGszUWRtmi7RJZMY2EdMC6gz8IUg6zTTI3Nbo-YUwQ2ugzjmapfwQ07mkE_6ZmtuX/exec";
 </script>
 
 <header class="bg-white shadow sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
     <h1 class="text-2xl font-black text-green-600">Zolpai<span class="text-orange-500">.com</span></h1>
-    <input id="searchBox" placeholder="খুঁজুন..." class="border border-gray-300 rounded-full px-4 py-2 text-sm w-44 md:w-80 outline-none">
+    <input id="searchBox" placeholder="খুঁজুন..." class="border border-gray-300 rounded-full px-4 py-2 text-sm w-44 md:w-80 outline-none focus:border-green-500">
   </div>
 </header>
 
 <main class="max-w-7xl mx-auto px-4 py-6">
-  <div id="loading" class="text-center py-20 font-semibold text-gray-500">লোড হচ্ছে...</div>
-  <div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  <div id="loading" class="text-center py-20 text-gray-500 font-semibold">লোড হচ্ছে...</div>
+  <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"></div>
 </main>
 
 <script>
@@ -43,11 +43,11 @@ let allProducts=[];
 
 async function load(){
   try{
-    // গুগল স্ক্রিপ্ট হয়ে ডেটা আসবে, তাই কোনো CORS Error হবে না
-    const res = await fetch(GOOGLE_SCRIPT_URL); 
-    
-    if(!res.ok) throw new Error("সার্ভার রেসপন্স ঠিক নেই");
-    
+    // এখন আর api.php লাগবে না, সরাসরি গুগল স্ক্রিপ্ট থেকে ডেটা আসবে
+    const res = await fetch(GOOGLE_SCRIPT_URL);
+
+    if(!res.ok) throw new Error("সার্ভার থেকে সঠিক রেসপন্স আসেনি!");
+
     const json = await res.json();
     
     if(json.result === true) {
@@ -59,7 +59,7 @@ async function load(){
     document.getElementById('loading').style.display='none';
     render(allProducts);
   }catch(e){
-    document.getElementById('loading').innerHTML = '<span class="text-red-500">Error: ' + e.message + '</span>';
+    document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold">Error: '+e.message+'</span>';
   }
 }
 
@@ -73,21 +73,24 @@ function render(list){
     const original = parseFloat(p.price||0);
     const percent = PROFIT_BY_ID[p.id] !== undefined ? PROFIT_BY_ID[p.id] : DEFAULT_PROFIT;
     const myPrice = Math.round(original * (1 + percent/100));
-    
     const catName = p.category_name || 'পণ্য';
+    
     const cleanName = (p.name || '').replace(/'/g, "").replace(/"/g, "");
 
-    return `<div class="bg-white rounded-2xl shadow border overflow-hidden">
-      <img src="${p.thumbnail_image || 'https://via.placeholder.com/300'}" class="h-52 w-full object-cover">
-      <div class="p-3">
-        <p class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full w-fit">${catName} • +${percent}%</p>
-        <h3 class="font-semibold text-sm mt-1 h-10 line-clamp-2">${p.name}</h3>
-        <div class="flex justify-between items-center mt-3">
+    return `<div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100 overflow-hidden group">
+      <div class="relative overflow-hidden bg-gray-100">
+        <img src="${p.thumbnail_image || 'https://via.placeholder.com/300'}" class="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500">
+        <span class="absolute top-2 left-2 text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold shadow">+${percent}%</span>
+      </div>
+      <div class="p-4">
+        <p class="text-[10px] text-gray-500 mb-1">${catName}</p>
+        <h3 class="font-semibold text-gray-800 text-sm h-10 line-clamp-2 leading-tight">${p.name}</h3>
+        <div class="flex justify-between items-end mt-4">
           <div>
-            <p class="font-bold text-lg text-green-600">৳${myPrice}</p>
-            <p class="text-xs line-through text-gray-400">৳${original}</p>
+            <p class="text-xs line-through text-gray-400 mb-0.5">৳${original}</p>
+            <p class="font-bold text-lg text-green-600 leading-none">৳${myPrice}</p>
           </div>
-          <button onclick="orderProduct('${cleanName}', ${myPrice})" class="bg-orange-500 text-white px-4 py-1.5 rounded-full text-xs font-bold">অর্ডার</button>
+          <button onclick="orderProduct('${cleanName}', ${myPrice})" class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-md">অর্ডার</button>
         </div>
       </div>
     </div>`;
