@@ -11,7 +11,7 @@
 <body class="bg-gray-50">
 
 <script>
-// লাভের পরিমাণ
+// ★★★ এখানে আলাদা আলাদা লাভ দাও ★★★
 const PROFIT_BY_ID = {
   1: 10,   
   2: 100,  
@@ -22,9 +22,8 @@ const DEFAULT_PROFIT = 20;
 // আপনার হোয়াটসঅ্যাপ নম্বর
 const WHATSAPP_NUMBER = "8801602100492"; 
 
-// Dumkol API Credentials
-const API_KEY = "dumkol_key_a3SsiDLJLIKaKdPV";
-const API_SECRET = "dumkol_sec_BfCYnfv70oYQFRC6JqJM5CjhAB6uojHN";
+// ★★★ আপনার গুগল স্ক্রিপ্ট লিংক ★★★
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNGszUWRtmi7RJZMY2EdMC6gz8IUg6zTTI3Nbo-YUwQ2ugzjmapfwQ07mkE_6ZmtuX/exec";
 </script>
 
 <header class="bg-white shadow sticky top-0 z-50">
@@ -44,17 +43,10 @@ let allProducts=[];
 
 async function load(){
   try{
-    // সরাসরি ধুমকলের সার্ভারে রিকোয়েস্ট (কোনো প্রক্সি ছাড়া)
-    const res = await fetch('https://www.dumkol.com/api/product', {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Api-Key': API_KEY,
-        'Api-Secret-Key': API_SECRET
-      }
-    });
+    // গুগল স্ক্রিপ্ট হয়ে ডেটা আসবে, তাই কোনো CORS Error হবে না
+    const res = await fetch(GOOGLE_SCRIPT_URL); 
     
-    if(!res.ok) throw new Error("সার্ভার রেসপন্স ঠিক নেই (CORS Blocked হতে পারে)");
+    if(!res.ok) throw new Error("সার্ভার রেসপন্স ঠিক নেই");
     
     const json = await res.json();
     
