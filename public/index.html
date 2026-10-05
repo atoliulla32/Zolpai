@@ -3,152 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zolpai.com</title>
+<title>Zolpai.com - পাইকারি বাজার</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase Libraries (Compat version) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
 <style>
-  body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0fdf4; } /* হালকা সবুজ ব্যাকগ্রাউন্ড */
+  body { font-family: 'Hind Siliguri', sans-serif; background-color: #f4f7f6; }
+  .radio-btn-input:checked + .radio-btn-label { background-color: #16a34a; color: white; border-color: #16a34a; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  
+  /* Custom thin scrollbar */
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+  /* Professional HTML Description Styling */
+  .desc-html { font-size: 13.5px; line-height: 1.7; color: #475569; }
+  .desc-html p { margin-bottom: 0.75rem; }
+  .desc-html ul, .desc-html ol { margin-left: 1.5rem; margin-bottom: 0.75rem; }
+  .desc-html ul { list-style-type: disc; } 
+  .desc-html ol { list-style-type: decimal; }
+  .desc-html li { margin-bottom: 0.25rem; }
+  .desc-html strong, .desc-html b { color: #1e293b; font-weight: 700; }
+  .desc-html img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
 </style>
 </head>
-<body class="pb-10">
+<body class="pb-24">
 
 <script>
-// ★ লাভ সেট করুন 
-const PROFIT_BY_ID = { 1: 10, 2: 100, 5: 3 };
-const DEFAULT_PROFIT = 20; 
+// ★ Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDmhKNr1boldjyzfmiBW3kmqvj6uuw1JkQ",
+  authDomain: "zolpai.firebaseapp.com",
+  projectId: "zolpai",
+  storageBucket: "zolpai.firebasestorage.app",
+  messagingSenderId: "277601431495",
+  appId: "1:277601431495:web:a9787485f2274e8edbb3e2",
+  measurementId: "G-QE8MFBCXT4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-// ★ আপনার হোয়াটসঅ্যাপ নম্বর
+// ★ WhatsApp Number & Google Script URL
 const WHATSAPP_NUMBER = "8801602100492"; 
-
-// ★ গুগল স্ক্রিপ্ট লিংক
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdjN7gVjmqVuaiIHngvVxwEDdfXEw__6i_OfE1Ev0V8s_JmMcwXYTIc_vK8zQ3LESO/exec";
 </script>
 
 <!-- Header -->
-<header class="bg-white shadow-sm sticky top-0 z-40">
+<header class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
   <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
     <div class="flex items-center gap-2 cursor-pointer" onclick="showCategories()">
-      <h1 class="text-2xl font-black text-green-700">Zolpai<span class="text-orange-500">.com</span></h1>
+      <h1 class="text-2xl font-black text-green-700 tracking-tight">Zolpai<span class="text-orange-500">.com</span></h1>
     </div>
     <div class="flex items-center gap-3">
-      <!-- Cart Icon -->
-      <button onclick="toggleCart()" class="relative p-2 bg-green-50 rounded-full hover:bg-green-100 transition">
+      <div class="relative">
+        <input id="searchBox" placeholder="পণ্য খুঁজুন..." class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm w-40 md:w-72 outline-none focus:border-green-500 focus:bg-white transition-all shadow-inner">
+      </div>
+      <button onclick="toggleCart()" class="hidden md:flex relative p-2.5 bg-green-50 rounded-xl hover:bg-green-100 transition items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-        <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">0</span>
+        <span class="cart-count absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shadow-sm border-2 border-white">0</span>
       </button>
     </div>
   </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-4 py-6">
-  <div id="loading" class="text-center py-20 text-gray-500 font-bold flex flex-col items-center">
-    <div class="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-    লোড হচ্ছে, দয়া করে অপেক্ষা করুন...
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <div id="loading" class="text-center py-24 text-gray-500 font-bold flex flex-col items-center">
+    <div class="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4 shadow-sm"></div>
+    প্রোডাক্ট লোড হচ্ছে, দয়া করে অপেক্ষা করুন...
   </div>
   
-  <!-- ক্যাটাগরি গ্রিড ভিউ (শুরুতে এটি দেখাবে) -->
+  <!-- Category View -->
   <div id="categoryView" class="hidden">
-    <h2 class="text-xl md:text-2xl font-black text-center text-gray-800 mb-6">আমাদের প্রোডাক্ট সমূহ</h2>
-    <div id="categoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <!-- ক্যাটাগরি কার্ডগুলো এখানে আসবে -->
-    </div>
+    <h2 class="text-2xl md:text-3xl font-black text-center text-gray-800 mb-8">আমাদের কালেকশন</h2>
+    <div id="categoryGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"></div>
   </div>
 
-  <!-- প্রোডাক্ট ভিউ (ক্যাটাগরিতে ক্লিক করলে এটি দেখাবে) -->
+  <!-- Product View -->
   <div id="productView" class="hidden">
-    <div class="flex items-center justify-between mb-6 border-b border-green-200 pb-3">
-      <button onclick="showCategories()" class="text-green-700 hover:text-green-800 font-bold flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
-        ফিরে যান
+    <div class="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">
+      <button onclick="showCategories()" class="text-gray-600 hover:text-green-700 font-bold flex items-center gap-1.5 bg-white border border-gray-200 shadow-sm px-4 py-2 rounded-xl transition-all hover:shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        ব্যাক
       </button>
-      <h2 id="currentCategoryTitle" class="text-lg md:text-xl font-black text-gray-800">ক্যাটাগরি</h2>
+      <h2 id="currentCategoryTitle" class="text-xl md:text-2xl font-black text-gray-800">ক্যাটাগরি</h2>
     </div>
-    
-    <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
-      <!-- প্রোডাক্টগুলো এখানে আসবে -->
-    </div>
+    <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6"></div>
   </div>
 </main>
 
-<!-- Cart Modal -->
-<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden justify-end">
-  <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform translate-x-full duration-300" id="cartContent">
-    <div class="flex justify-between items-center p-4 border-b bg-gray-50">
-      <h2 class="text-lg font-bold text-gray-800">🛒 আপনার কার্ট</h2>
-      <button onclick="toggleCart()" class="text-gray-500 hover:text-red-500 bg-gray-200 rounded-full p-1">
+<!-- Floating Cart Button (Mobile) -->
+<button onclick="toggleCart()" class="md:hidden fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-2xl z-40 hover:bg-green-700 transition-transform flex items-center justify-center">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+  <span class="cart-count absolute 0 -top-1 -right-1 bg-red-500 text-white text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full shadow-sm border-2 border-green-600">0</span>
+</button>
+
+<!-- Quick View Modal -->
+<div id="quickViewModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 backdrop-blur-sm z-[60] hidden justify-center items-center p-4">
+  <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] transform transition-transform scale-95 duration-300 overflow-hidden" id="quickViewContent">
+    <div class="flex justify-between items-center px-5 py-4 border-b bg-gray-50">
+      <h3 class="font-bold text-gray-800 text-lg line-clamp-1 flex-1 pr-4" id="qvTitle">বিস্তারিত</h3>
+      <button onclick="closeQuickView()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-1.5 transition-colors shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
-    <div id="cartItems" class="flex-1 overflow-y-auto p-4 space-y-4">
-      <!-- কার্ট আইটেম -->
-    </div>
-    <div class="p-4 border-t bg-white shadow-inner">
-      <div class="flex justify-between font-black text-lg mb-4">
-        <span>সর্বমোট বিল:</span>
-        <span id="cartTotal" class="text-green-600">৳0</span>
+    
+    <div class="p-5 overflow-y-auto custom-scrollbar flex flex-col md:flex-row gap-8 bg-white">
+      <div class="w-full md:w-2/5 shrink-0">
+        <div class="rounded-xl overflow-hidden border border-gray-100 shadow-sm mb-3 bg-gray-50 aspect-square relative">
+          <img id="qvImage" src="" class="w-full h-full object-cover">
+          <!-- প্রোডাক্ট কোড -->
+          <span id="qvCode" class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md font-bold backdrop-blur-sm"></span>
+        </div>
+        <div id="qvGallery" class="flex gap-2 overflow-x-auto custom-scrollbar pb-2"></div>
       </div>
-      <button onclick="checkoutWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 active:scale-95 transition-transform text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 text-lg shadow-md">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-        অর্ডার কনফার্ম করুন
+      
+      <div class="w-full md:w-3/5 flex flex-col">
+        <div class="flex items-end gap-3 mb-5 pb-5 border-b border-gray-100 relative">
+          <p id="qvPrice" class="font-black text-3xl text-green-600 leading-none"></p>
+          <p id="qvOldPrice" class="text-sm line-through text-gray-400 mb-1"></p>
+          <span id="qvDiscountBadge" class="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded border border-red-100 mb-1 ml-auto"></span>
+        </div>
+        
+        <div class="mb-5 flex-1 flex flex-col">
+          <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            পণ্যের বিবরণ:
+          </h4>
+          <div class="relative flex-1">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 h-48 md:h-56 overflow-y-auto custom-scrollbar shadow-inner relative z-10">
+              <div id="qvDesc" class="desc-html pb-6"></div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none rounded-b-xl z-20"></div>
+            <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-30 text-[10px] text-gray-500 font-bold bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm flex items-center gap-1 animate-pulse">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+              স্ক্রল করে পড়ুন
+            </div>
+          </div>
+        </div>
+        
+        <div id="qvActions" class="flex gap-3 mt-auto pt-4 border-t border-gray-100"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Variant Selection Modal -->
+<div id="variantModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 backdrop-blur-sm z-[70] hidden justify-center items-end md:items-center">
+  <div class="bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl shadow-2xl flex flex-col transform transition-transform translate-y-full duration-300" id="variantContent">
+    <div class="flex justify-between items-center p-5 border-b">
+      <h3 class="font-bold text-gray-800 text-lg">পছন্দ করুন</h3>
+      <button onclick="closeVariantModal()" class="text-gray-400 hover:text-red-500 bg-gray-100 rounded-full p-1.5 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <div class="p-5 overflow-y-auto max-h-80 custom-scrollbar" id="variantOptionsContainer"></div>
+    <div class="p-5 border-t bg-gray-50 rounded-b-2xl">
+      <button id="confirmVariantBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors text-lg">
+        নিশ্চিত করুন
       </button>
     </div>
   </div>
 </div>
 
+<!-- Cart Modal -->
+<div id="cartModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 backdrop-blur-sm z-[60] hidden justify-end">
+  <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform translate-x-full duration-300" id="cartContent">
+    <div class="flex justify-between items-center p-5 border-b bg-white">
+      <h2 class="text-xl font-black text-gray-800 flex items-center gap-2">🛒 আপনার কার্ট</h2>
+      <button onclick="toggleCart()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-1.5 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+    </div>
+    <div id="cartItems" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/80 custom-scrollbar"></div>
+    <div class="p-5 border-t bg-white shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <div class="flex justify-between items-center font-black text-lg mb-4 bg-green-50 p-3 rounded-xl border border-green-100">
+        <span class="text-green-800">সর্বমোট বিল:</span>
+        <span id="cartTotal" class="text-green-600 text-xl">৳0</span>
+      </div>
+      <button onclick="checkoutWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold flex justify-center items-center gap-2 text-lg shadow-lg">অর্ডার কনফার্ম করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toastContainer" class="fixed bottom-24 md:bottom-10 left-1/2 transform -translate-x-1/2 z-[90] flex flex-col gap-2 pointer-events-none"></div>
+
 <script>
+let gasData = [];
 let allProducts = [];
 let categoryList = [];
-let cart = [];
+let cart = JSON.parse(localStorage.getItem('zolpai_cart')) || [];
+let customFirebasePrices = {}; 
+let pendingAction = null, pendingProduct = null, availableVariantKeys = [];
+
+const formatPrice = (price) => new Intl.NumberFormat('en-IN').format(price);
+
+// ★ ফায়ারবেস রিয়েল-টাইম প্রাইস চেকার (এডমিন প্যানেল থেকে ডেটা আসবে)
+db.ref('custom_prices').on('value', (snapshot) => {
+  customFirebasePrices = snapshot.val() || {};
+  if(gasData.length > 0) processAndRenderData(); 
+});
 
 async function load(){
+  updateCartUI(); 
   try{
+    // গুগল স্ক্রিপ্ট থেকে ডেটা আনা
     const res = await fetch(GOOGLE_SCRIPT_URL, { method: "GET", redirect: "follow" });
     if(!res.ok) throw new Error("সার্ভার রেসপন্স করছে না!");
     const json = await res.json();
     
     if(json.result === true) {
-      allProducts = (json.data || []).map(p => {
-        const original = parseFloat(p.price||0);
-        const percent = PROFIT_BY_ID[p.id] !== undefined ? PROFIT_BY_ID[p.id] : DEFAULT_PROFIT;
-        p.myPrice = Math.round(original * (1 + percent/100));
-        p.category_name = p.category_name || 'অন্যান্য';
-        p.profitPercent = percent;
-        return p;
-      });
-      
-      extractCategories();
-      
+      gasData = json.data || [];
+      processAndRenderData();
       document.getElementById('loading').style.display = 'none';
-      showCategories(); // প্রথমে ক্যাটাগরি পেজ লোড হবে
-    } else {
-      throw new Error(json.message || "ডেটা আসেনি");
     }
   }catch(e){
-    document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold">Error: '+e.message+'</span>';
+    document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold bg-red-50 px-4 py-2 rounded-lg">Error: '+e.message+'</span>';
   }
 }
 
-// প্রোডাক্ট থেকে ক্যাটাগরি এবং ক্যাটাগরির ছবি বের করা
+function processAndRenderData() {
+  allProducts = gasData.map(p => {
+    // ফায়ারবেসে যদি কাস্টম দাম থাকে, তবে সেটা নেবে, না থাকলে গুগলের ডিফল্ট দাম (defaultSalePrice) নেবে
+    let finalSalePrice = customFirebasePrices[p.id] ? parseFloat(customFirebasePrices[p.id]) : parseFloat(p.defaultSalePrice);
+    p.myPrice = finalSalePrice;
+    
+    // গুগল স্ক্রিপ্ট থেকে আসা oldPrice ব্যবহার করা হচ্ছে (আসল দামের ২ গুন)
+    p.discountPercent = Math.round(((p.oldPrice - finalSalePrice) / p.oldPrice) * 100);
+    return p;
+  });
+  
+  extractCategories();
+  
+  // চেক করা হচ্ছে কোন পেজে আছে
+  const currentQ = document.getElementById('searchBox').value.toLowerCase();
+  if(currentQ) {
+    renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(currentQ) || p.category_name.toLowerCase().includes(currentQ)));
+  } else if (!document.getElementById('productView').classList.contains('hidden')) {
+    const catTitle = document.getElementById('currentCategoryTitle').innerText;
+    renderProducts(allProducts.filter(p => p.category_name === catTitle));
+  } else {
+    showCategories(); 
+  }
+}
+
 function extractCategories() {
   const catMap = new Map();
-  allProducts.forEach(p => {
-    if(!catMap.has(p.category_name)) {
-      // ক্যাটাগরির কভার হিসেবে ওই ক্যাটাগরির প্রথম প্রোডাক্টের ছবি রাখা হচ্ছে
-      catMap.set(p.category_name, p.thumbnail_image || 'https://via.placeholder.com/300');
-    }
-  });
+  allProducts.forEach(p => { if(!catMap.has(p.category_name)) catMap.set(p.category_name, p.thumbnail_image || 'https://via.placeholder.com/300'); });
   categoryList = Array.from(catMap, ([name, image]) => ({ name, image }));
 }
 
-// ক্যাটাগরি পেজ দেখানো
 function showCategories() {
-  document.getElementById('productView').classList.add('hidden');
-  document.getElementById('categoryView').classList.remove('hidden');
+  document.getElementById('productView').classList.add('hidden'); 
+  document.getElementById('categoryView').classList.remove('hidden'); 
+  document.getElementById('searchBox').value = '';
   
   const grid = document.getElementById('categoryGrid');
   grid.innerHTML = categoryList.map(cat => `
-    <div onclick="showCategoryProducts('${cat.name.replace(/'/g, "\\'")}')" class="bg-white rounded-xl shadow hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-100 flex flex-col items-center p-3 text-center">
-      <div class="w-24 h-24 mb-3 rounded-full overflow-hidden bg-green-50 border-4 border-green-100">
+    <div onclick="showCategoryProducts('${cat.name.replace(/'/g, "\\'")}')" class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden border border-gray-100 flex flex-col items-center p-5 text-center group">
+      <div class="w-24 h-24 mb-4 rounded-full overflow-hidden bg-green-50 border-[3px] border-green-100 group-hover:scale-110 transition-transform duration-300">
         <img src="${cat.image}" class="w-full h-full object-cover">
       </div>
       <h3 class="font-bold text-gray-800 text-sm md:text-base">${cat.name}</h3>
@@ -156,151 +273,250 @@ function showCategories() {
   `).join('');
 }
 
-// নির্দিষ্ট ক্যাটাগরির প্রোডাক্ট দেখানো
 function showCategoryProducts(categoryName) {
-  document.getElementById('categoryView').classList.add('hidden');
-  document.getElementById('productView').classList.remove('hidden');
+  document.getElementById('categoryView').classList.add('hidden'); 
+  document.getElementById('productView').classList.remove('hidden'); 
   document.getElementById('currentCategoryTitle').innerText = categoryName;
-  
-  const products = allProducts.filter(p => p.category_name === categoryName);
+  renderProducts(allProducts.filter(p => p.category_name === categoryName));
+}
+
+function renderProducts(products) {
   const grid = document.getElementById('productGrid');
+  if(products.length === 0) return grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500 font-bold bg-white rounded-xl shadow-sm border border-gray-100">কোনো পণ্য পাওয়া যায়নি</div>';
   
-  grid.innerHTML = products.map(p => {
-    const imgUrl = p.thumbnail_image || 'https://via.placeholder.com/300';
-    return `
-    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col">
-      <div class="relative overflow-hidden bg-gray-50 aspect-square">
-        <img src="${imgUrl}" loading="lazy" class="h-full w-full object-cover">
-        <span class="absolute top-2 left-2 text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold shadow">+${p.profitPercent}%</span>
+  grid.innerHTML = products.map(p => `
+    <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col cursor-pointer group" onclick="openQuickView(${p.id})">
+      <div class="relative overflow-hidden bg-gray-50 aspect-square flex items-center justify-center">
+        <img src="${p.thumbnail_image || 'https://via.placeholder.com/300'}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+        <span class="absolute top-2 left-2 text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold shadow-sm">-${p.discountPercent}%</span>
+        <span class="absolute top-2 right-2 text-[10px] bg-gray-800 text-white px-2 py-0.5 rounded font-bold shadow-sm">কোড: ${p.id}</span>
+        <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur shadow-md border border-gray-200 text-gray-700 px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 opacity-90 group-hover:opacity-100 group-hover:-translate-y-1 transition-all">👀 বিস্তারিত দেখুন</div>
       </div>
-      <div class="p-3 flex flex-col flex-1">
-        <h3 class="font-semibold text-gray-800 text-xs md:text-sm h-9 md:h-10 line-clamp-2 leading-tight mb-2">${p.name}</h3>
+      <div class="p-3 md:p-4 flex flex-col flex-1">
+        <h3 class="font-bold text-gray-700 text-xs md:text-sm h-9 md:h-10 line-clamp-2 leading-tight mb-2 group-hover:text-green-600 transition-colors">${p.name}</h3>
         <div class="flex items-center gap-2 mb-3 mt-auto">
-          <p class="font-bold text-base md:text-lg text-green-600 leading-none">৳${p.myPrice}</p>
-          <p class="text-[10px] md:text-xs line-through text-gray-400">৳${p.price}</p>
+          <p class="font-black text-base md:text-lg text-green-600 leading-none">৳${formatPrice(p.myPrice)}</p>
+          <p class="text-[10px] md:text-xs line-through text-gray-400">৳${formatPrice(p.oldPrice)}</p>
         </div>
-        <div class="flex flex-col gap-2">
-          <button onclick="addToCart(${p.id}, this)" class="w-full border border-green-500 text-green-700 bg-green-50 hover:bg-green-100 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
-             🛒 কার্টে যোগ করুন
-          </button>
-          <button onclick="buyNow(${p.id})" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
-             ⚡ অর্ডার করুন
-          </button>
+        <div class="flex flex-col gap-2 relative z-10" onclick="event.stopPropagation()">
+          <button onclick="handleAction(${p.id}, 'cart')" class="w-full border-2 border-green-500 text-green-600 hover:bg-green-50 active:scale-95 py-1.5 rounded-xl text-xs font-bold transition-all">🛒 কার্টে যোগ করুন</button>
+          <button onclick="handleAction(${p.id}, 'buy')" class="w-full bg-orange-500 hover:bg-orange-600 active:scale-95 text-white py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm">⚡ অর্ডার করুন</button>
         </div>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
 
-// --- কার্ট সিস্টেম ---
-function addToCart(id, btnElement) {
-  const p = allProducts.find(item => item.id === id);
-  if(!p) return;
+document.getElementById('searchBox').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  if(!q) return showCategories();
+  document.getElementById('categoryView').classList.add('hidden'); 
+  document.getElementById('productView').classList.remove('hidden'); 
+  document.getElementById('currentCategoryTitle').innerText = 'সার্চ রেজাল্ট';
+  renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(q) || p.category_name.toLowerCase().includes(q)));
+});
+
+function openQuickView(id) {
+  const p = allProducts.find(item => item.id === id); if(!p) return;
   
-  const existing = cart.find(item => item.id === id);
-  if(existing) {
-    existing.qty++;
+  document.getElementById('qvTitle').innerText = p.name; 
+  document.getElementById('qvImage').src = p.thumbnail_image; 
+  document.getElementById('qvCode').innerText = `কোড: ${p.id}`;
+  document.getElementById('qvPrice').innerText = `৳${formatPrice(p.myPrice)}`; 
+  document.getElementById('qvOldPrice').innerText = `৳${formatPrice(p.oldPrice)}`;
+  document.getElementById('qvDiscountBadge').innerText = `সেভ ৳${formatPrice(p.oldPrice - p.myPrice)}`; 
+  document.getElementById('qvDesc').innerHTML = p.description || '<p>কোনো বিবরণ নেই।</p>';
+  
+  document.getElementById('qvActions').innerHTML = `
+    <button onclick="handleAction(${p.id}, 'cart'); closeQuickView();" class="flex-1 border-2 border-green-500 text-green-600 bg-green-50 hover:bg-green-100 font-bold py-2.5 rounded-xl transition-colors text-sm">🛒 কার্টে যোগ</button>
+    <button onclick="handleAction(${p.id}, 'buy'); closeQuickView();" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors text-sm">⚡ দ্রুত অর্ডার</button>
+  `;
+
+  const gallery = document.getElementById('qvGallery');
+  if(p.gallery_image && p.gallery_image.length > 0) {
+    let images = [p.thumbnail_image, ...p.gallery_image];
+    gallery.innerHTML = images.map(img => `<img src="${img}" onclick="document.getElementById('qvImage').src='${img}'" class="w-14 h-14 object-cover rounded-lg border-2 border-transparent hover:border-green-500 cursor-pointer transition-all shrink-0 shadow-sm bg-white">`).join('');
+    gallery.classList.remove('hidden');
   } else {
-    cart.push({ id: p.id, name: p.name, price: p.myPrice, image: p.thumbnail_image, qty: 1 });
+    gallery.classList.add('hidden');
   }
-  updateCartUI();
-  
-  const originalText = btnElement.innerHTML;
-  btnElement.innerHTML = '✔ যোগ হয়েছে!';
-  btnElement.classList.replace('text-green-700', 'text-white');
-  btnElement.classList.replace('bg-green-50', 'bg-green-600');
-  
-  setTimeout(() => {
-    btnElement.innerHTML = originalText;
-    btnElement.classList.replace('text-white', 'text-green-700');
-    btnElement.classList.replace('bg-green-600', 'bg-green-50');
-  }, 1000);
 
-  document.getElementById('cartCount').classList.add('animate-bounce');
-  setTimeout(() => document.getElementById('cartCount').classList.remove('animate-bounce'), 1000);
+  const modal = document.getElementById('quickViewModal'); 
+  const content = document.getElementById('quickViewContent');
+  modal.classList.remove('hidden'); 
+  modal.classList.add('flex'); 
+  setTimeout(() => content.classList.replace('scale-95', 'scale-100'), 10);
 }
 
-function updateCartQty(id, change) {
-  const item = cart.find(i => i.id === id);
-  if(item) {
-    item.qty += change;
-    if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
-    updateCartUI();
+function closeQuickView() {
+  const modal = document.getElementById('quickViewModal'); 
+  const content = document.getElementById('quickViewContent');
+  content.classList.replace('scale-100', 'scale-95'); 
+  setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+}
+
+function handleAction(id, actionType) {
+  const p = allProducts.find(item => item.id === id); if(!p) return;
+  if(p.product_type === 'variant' && p.variants && p.variants.length > 0) openVariantModal(p, actionType); 
+  else { if(actionType === 'cart') finalizeAddToCart(p, ''); else finalizeBuyNow(p, ''); }
+}
+
+function openVariantModal(product, actionType) {
+  pendingProduct = product; pendingAction = actionType; const optionsMap = {};
+  product.variants.forEach(v => { 
+    for(const key in v) { 
+      if(!['qty', 'regular_price', 'price', 'sku'].includes(key)) { 
+        if(!optionsMap[key]) optionsMap[key] = new Set(); 
+        if(v[key]) optionsMap[key].add(v[key]); 
+      } 
+    } 
+  });
+  
+  availableVariantKeys = Object.keys(optionsMap); 
+  const container = document.getElementById('variantOptionsContainer'); 
+  container.innerHTML = '';
+  
+  availableVariantKeys.forEach(key => {
+    const values = Array.from(optionsMap[key]);
+    if(values.length > 0) {
+      let html = `<div class="mb-5"><h4 class="font-bold text-gray-700 mb-2">${key}:</h4><div class="flex flex-wrap gap-2">`;
+      values.forEach((val, index) => {
+        const inputId = `var_${key}_${index}`;
+        html += `<div><input type="radio" name="variant_${key}" id="${inputId}" value="${val}" class="radio-btn-input hidden" ${index === 0 ? 'checked' : ''}><label for="${inputId}" class="radio-btn-label cursor-pointer px-4 py-1.5 border border-gray-300 bg-white rounded-lg text-sm font-bold text-gray-600 transition-colors block shadow-sm">${val}</label></div>`;
+      });
+      html += `</div></div>`; 
+      container.insertAdjacentHTML('beforeend', html);
+    }
+  });
+
+  const modal = document.getElementById('variantModal'); 
+  const content = document.getElementById('variantContent');
+  modal.classList.remove('hidden'); 
+  modal.classList.add('flex'); 
+  setTimeout(() => content.classList.remove('translate-y-full'), 10);
+  
+  document.getElementById('confirmVariantBtn').onclick = () => {
+    let selectedDetails = []; let isAllSelected = true;
+    availableVariantKeys.forEach(key => {
+      const selected = document.querySelector(`input[name="variant_${key}"]:checked`);
+      if(selected) selectedDetails.push(`${key}: ${selected.value}`); else isAllSelected = false;
+    });
+    if(!isAllSelected && availableVariantKeys.length > 0) return showToast("সব অপশন সিলেক্ট করুন", "error");
+    const variantString = selectedDetails.length > 0 ? `(${selectedDetails.join(', ')})` : ''; 
+    closeVariantModal();
+    if(pendingAction === 'cart') finalizeAddToCart(pendingProduct, variantString); else finalizeBuyNow(pendingProduct, variantString);
+  };
+}
+
+function closeVariantModal() {
+  const modal = document.getElementById('variantModal'); 
+  const content = document.getElementById('variantContent');
+  content.classList.add('translate-y-full'); 
+  setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+}
+
+function saveCart() { 
+  localStorage.setItem('zolpai_cart', JSON.stringify(cart)); 
+  updateCartUI(); 
+}
+
+function finalizeAddToCart(p, variantString) {
+  const cartItemId = p.id + (variantString ? '-' + variantString : ''); 
+  const existing = cart.find(item => item.cartId === cartItemId);
+  if(existing) existing.qty++; 
+  else cart.push({ cartId: cartItemId, id: p.id, name: p.name, variantText: variantString, price: p.myPrice, image: p.thumbnail_image, qty: 1 });
+  saveCart(); 
+  showToast("কার্টে যোগ করা হয়েছে! 🛒", "success");
+}
+
+function updateCartQty(cartId, change) {
+  const item = cart.find(i => i.cartId === cartId);
+  if(item) { 
+    item.qty += change; 
+    if(item.qty <= 0) cart = cart.filter(i => i.cartId !== cartId); 
+    saveCart(); 
   }
 }
 
 function updateCartUI() {
-  document.getElementById('cartCount').innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  document.querySelectorAll('.cart-count').forEach(el => el.innerText = count);
   const container = document.getElementById('cartItems');
   
-  if(cart.length === 0) {
-    container.innerHTML = '<div class="text-center text-gray-400 mt-20 font-bold">আপনার কার্ট খালি!</div>';
-    document.getElementById('cartTotal').innerText = '৳0';
-    return;
+  if(cart.length === 0) { 
+    container.innerHTML = `<div class="text-center text-gray-400 mt-10 font-bold">আপনার কার্ট খালি!</div>`; 
+    document.getElementById('cartTotal').innerText = '৳0'; 
+    return; 
   }
   
   let total = 0;
   container.innerHTML = cart.map(item => {
     total += item.price * item.qty;
     return `
-    <div class="flex gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-      <img src="${item.image}" class="w-16 h-16 object-cover rounded-md bg-gray-50 border">
+    <div class="flex gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+      <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg bg-gray-50 border">
       <div class="flex-1 flex flex-col justify-between">
-        <h4 class="text-xs font-semibold text-gray-800 line-clamp-2">${item.name}</h4>
+        <div>
+          <h4 class="text-sm font-bold text-gray-800 line-clamp-1">${item.name}</h4>
+          ${item.variantText ? `<p class="text-[10px] font-bold text-orange-500 mt-0.5">${item.variantText}</p>` : ''}
+        </div>
         <div class="flex justify-between items-center mt-2">
-          <span class="text-sm font-black text-green-600">৳${item.price}</span>
-          <div class="flex items-center border rounded-lg bg-gray-50">
-            <button onclick="updateCartQty(${item.id}, -1)" class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded-l-lg font-bold">-</button>
-            <span class="px-2 text-xs font-bold">${item.qty}</span>
-            <button onclick="updateCartQty(${item.id}, 1)" class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded-r-lg font-bold">+</button>
+          <span class="text-sm font-black text-green-600">৳${formatPrice(item.price)}</span>
+          <div class="flex items-center border border-gray-200 rounded-lg bg-white shadow-sm">
+            <button onclick="updateCartQty('${item.cartId}', -1)" class="px-3 py-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-l-lg font-bold">-</button>
+            <span class="px-2 text-xs font-black w-6 text-center text-gray-700">${item.qty}</span>
+            <button onclick="updateCartQty('${item.cartId}', 1)" class="px-3 py-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-r-lg font-bold">+</button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
-  
-  document.getElementById('cartTotal').innerText = `৳${total}`;
+  document.getElementById('cartTotal').innerText = `৳${formatPrice(total)}`;
 }
 
 function toggleCart() {
-  const modal = document.getElementById('cartModal');
+  const modal = document.getElementById('cartModal'); 
   const content = document.getElementById('cartContent');
-  if(modal.classList.contains('hidden')) {
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(() => content.classList.remove('translate-x-full'), 10);
-  } else {
-    content.classList.add('translate-x-full');
-    setTimeout(() => {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }, 300);
+  if(modal.classList.contains('hidden')) { 
+    modal.classList.remove('hidden'); 
+    modal.classList.add('flex'); 
+    setTimeout(() => content.classList.remove('translate-x-full'), 10); 
+  } else { 
+    content.classList.add('translate-x-full'); 
+    setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); 
   }
 }
 
-// --- হোয়াটসঅ্যাপে অর্ডার ---
-function buyNow(id) {
-  const p = allProducts.find(item => item.id === id);
-  if(!p) return;
-  const msg = `হ্যালো, আমি একটি অর্ডার করতে চাই:\n\nপণ্য: ${p.name}\nদাম: ৳${p.myPrice}\nছবির লিংক: ${p.thumbnail_image}`;
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer'); 
+  const bgColor = type === 'success' ? 'bg-gray-800' : 'bg-red-500';
+  const toast = document.createElement('div');
+  toast.className = `${bgColor} text-white px-6 py-3 rounded-full font-bold shadow-2xl transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-2 text-sm border border-gray-600/50`; 
+  toast.innerHTML = message;
+  container.appendChild(toast); 
+  setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 10);
+  setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
+function finalizeBuyNow(p, variantString) {
+  const vText = variantString ? `\nসাইজ/কালার: ${variantString}` : '';
+  const msg = `হ্যালো, আমি একটি অর্ডার করতে চাই:\n\nপণ্য: ${p.name}\nকোড: ${p.id}${vText}\nদাম: ৳${formatPrice(p.myPrice)}\nছবির লিংক: ${p.thumbnail_image}`;
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function checkoutWhatsApp() {
-  if(cart.length === 0) return alert('আপনার কার্ট খালি!');
-  
-  let msg = `হ্যালো, আমি নিচের পণ্যগুলো অর্ডার করতে চাই:\n\n`;
+  if(cart.length === 0) return showToast('আপনার কার্ট খালি!', 'error');
+  let msg = `হ্যালো, আমি নিচের পণ্যগুলো অর্ডার করতে চাই:\n\n`; 
   let total = 0;
-  
   cart.forEach((item, i) => {
-    msg += `${i+1}. ${item.name}\nপরিমাণ: ${item.qty} টি\nদাম: ৳${item.price * item.qty}\nছবির লিংক: ${item.image}\n\n`;
+    const vText = item.variantText ? ` ${item.variantText}` : '';
+    msg += `${i+1}. ${item.name} (কোড: ${item.id})${vText}\nপরিমাণ: ${item.qty} টি\nদাম: ৳${formatPrice(item.price * item.qty)}\nছবির লিংক: ${item.image}\n\n`;
     total += item.price * item.qty;
   });
-  
-  msg += `------------------\n*সর্বমোট বিল: ৳${total}*`;
+  msg += `------------------\n*সর্বমোট বিল: ৳${formatPrice(total)}*`;
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
+// Start Application
 load();
 </script>
 </body>
