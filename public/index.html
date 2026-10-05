@@ -22,8 +22,8 @@ const DEFAULT_PROFIT = 20; // বাকি সব প্রোডাক্টে
 // আপনার হোয়াটসঅ্যাপ নম্বর
 const WHATSAPP_NUMBER = "8801602100492"; 
 
-// ★★★ আপনার আজীবন ফ্রি গুগল স্ক্রিপ্ট লিংক ★★★
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNGszUWRtmi7RJZMY2EdMC6gz8IUg6zTTI3Nbo-YUwQ2ugzjmapfwQ07mkE_6ZmtuX/exec";
+// ★★★ আপনার নতুন গুগল স্ক্রিপ্ট লিংক ★★★
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdjN7gVjmqVuaiIHngvVxwEDdfXEw__6i_OfE1Ev0V8s_JmMcwXYTIc_vK8zQ3LESO/exec";
 </script>
 
 <header class="bg-white shadow sticky top-0 z-50">
@@ -43,7 +43,7 @@ let allProducts=[];
 
 async function load(){
   try{
-    // এখন আর api.php লাগবে না, সরাসরি গুগল স্ক্রিপ্ট থেকে ডেটা আসবে
+    // গুগল স্ক্রিপ্ট থেকে ডেটা আসবে, তাই কোনো CORS Error হবে না
     const res = await fetch(GOOGLE_SCRIPT_URL);
 
     if(!res.ok) throw new Error("সার্ভার থেকে সঠিক রেসপন্স আসেনি!");
