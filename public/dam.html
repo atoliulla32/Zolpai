@@ -10,32 +10,54 @@
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
 <style> body { font-family: 'Hind Siliguri', sans-serif; } </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 pb-20">
 
-<div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-  <h2 class="text-2xl font-black text-green-700 mb-6 text-center">নতুন দাম সেট করুন</h2>
-  
-  <div class="space-y-4">
-    <div>
+<!-- Price Set Section -->
+<div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-4xl mb-8">
+  <h2 class="text-xl font-black text-green-700 mb-6 border-b pb-2">মূল্য নিয়ন্ত্রণ প্যানেল (Price Update)</h2>
+  <div class="flex flex-col md:flex-row gap-4 items-end">
+    <div class="w-full md:w-2/5">
       <label class="block text-sm font-bold text-gray-700 mb-1">প্রোডাক্ট কোড (ID)</label>
       <input type="number" id="productId" placeholder="যেমন: 9609" class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-green-500 outline-none">
     </div>
-    
-    <div>
+    <div class="w-full md:w-2/5">
       <label class="block text-sm font-bold text-gray-700 mb-1">নতুন সেল প্রাইস (৳)</label>
       <input type="number" id="newPrice" placeholder="নতুন দাম লিখুন" class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-green-500 outline-none">
     </div>
-
-    <button onclick="updatePrice()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl mt-4 transition-colors shadow-md">
-      দাম আপডেট করুন
-    </button>
+    <div class="w-full md:w-1/5">
+      <button onclick="updatePrice()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl transition-colors shadow-md">আপডেট</button>
+    </div>
   </div>
-
-  <p id="message" class="text-center font-bold mt-4"></p>
+  <p id="message" class="text-center font-bold mt-3"></p>
 </div>
 
+<!-- Orders Section -->
+<div class="w-full max-w-4xl">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h2 class="text-2xl font-black text-gray-800">অর্ডার ম্যানেজমেন্ট</h2>
+    
+    <!-- Filter Dropdown -->
+    <div class="mt-3 md:mt-0 flex items-center gap-2">
+      <label class="font-bold text-sm text-gray-600">ফিল্টার:</label>
+      <select id="statusFilter" onchange="renderOrders()" class="bg-white border-2 border-gray-200 rounded-lg px-3 py-1.5 font-bold outline-none focus:border-green-500 cursor-pointer">
+        <option value="All">সব অর্ডার</option>
+        <option value="Pending">🔴 নতুন (Pending)</option>
+        <option value="Processing">🟡 প্রক্রিয়াধীন (Processing)</option>
+        <option value="Completed">✅ সম্পন্ন (Completed)</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="ordersContainer" class="space-y-5">
+    <p class="text-gray-500 font-bold text-center py-10 bg-white rounded-xl shadow">অর্ডার লোড হচ্ছে...</p>
+  </div>
+</div>
+
+<!-- Toast for Copy -->
+<div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-2 rounded-full font-bold shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50">কপি হয়েছে!</div>
+
 <script>
-// আপনার ফায়ারবেস কনফিগারেশন
+// ★ Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDmhKNr1boldjyzfmiBW3kmqvj6uuw1JkQ",
   authDomain: "zolpai.firebaseapp.com",
@@ -48,37 +70,166 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+let allOrders = [];
+
+// --- Price Update Logic ---
 function updatePrice() {
   const id = document.getElementById('productId').value;
   const price = document.getElementById('newPrice').value;
   const msgBox = document.getElementById('message');
+  if(!id || !price) { msgBox.innerText = "দয়া করে কোড এবং দাম লিখুন!"; msgBox.className = "text-center font-bold mt-3 text-red-500"; return; }
+  
+  msgBox.innerText = "আপডেট হচ্ছে..."; msgBox.className = "text-center font-bold mt-3 text-gray-500";
+  db.ref('custom_prices/' + id).set(price).then(() => {
+    msgBox.innerText = "✅ দাম সফলভাবে আপডেট হয়েছে!"; msgBox.className = "text-center font-bold mt-3 text-green-600";
+    document.getElementById('productId').value = ''; document.getElementById('newPrice').value = '';
+    setTimeout(() => { msgBox.innerText = ''; }, 3000);
+  }).catch((error) => { msgBox.innerText = "❌ সমস্যা হয়েছে: " + error.message; msgBox.className = "text-center font-bold mt-3 text-red-500"; });
+}
 
-  if(!id || !price) {
-    msgBox.innerText = "দয়া করে কোড এবং দাম দুটোই লিখুন!";
-    msgBox.className = "text-center font-bold mt-4 text-red-500";
-    return;
+// --- Fetch Orders ---
+db.ref('orders').orderByChild('timestamp').on('value', snapshot => {
+  allOrders = [];
+  if(snapshot.exists()) {
+    snapshot.forEach(child => { allOrders.push({ id: child.key, ...child.val() }); });
+    allOrders.reverse(); // Newest first
+  }
+  renderOrders();
+});
+
+function renderOrders() {
+  const container = document.getElementById('ordersContainer');
+  const filterVal = document.getElementById('statusFilter').value;
+  
+  let filteredOrders = allOrders;
+  if(filterVal !== 'All') {
+    filteredOrders = allOrders.filter(o => o.status === filterVal || (filterVal === 'Pending' && !o.status));
   }
 
-  msgBox.innerText = "আপডেট হচ্ছে...";
-  msgBox.className = "text-center font-bold mt-4 text-gray-500";
+  if(filteredOrders.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 font-bold text-center py-10 bg-white rounded-xl shadow border border-gray-100">কোনো অর্ডার পাওয়া যায়নি।</p>'; 
+    return;
+  }
+  
+  let ordersHTML = '';
+  filteredOrders.forEach(order => {
+    const date = new Date(order.timestamp).toLocaleString('en-IN');
+    const status = order.status || 'Pending';
+    
+    // Status color classes
+    let statusBg = status === 'Completed' ? 'bg-green-50 border-green-500' : (status === 'Processing' ? 'bg-yellow-50 border-yellow-400' : 'bg-white border-gray-200');
 
-  // ফায়ারবেসে দাম পাঠানো হচ্ছে
-  db.ref('custom_prices/' + id).set(price)
-    .then(() => {
-      msgBox.innerText = "✅ দাম সফলভাবে আপডেট হয়েছে!";
-      msgBox.className = "text-center font-bold mt-4 text-green-600";
-      
-      // সফল হলে ইনপুট বক্স ফাঁকা করে দেওয়া
-      document.getElementById('productId').value = '';
-      document.getElementById('newPrice').value = '';
-      
-      // ৩ সেকেন্ড পর মেসেজটি মুছে ফেলা
-      setTimeout(() => { msgBox.innerText = ''; }, 3000);
-    })
-    .catch((error) => {
-      msgBox.innerText = "❌ সমস্যা হয়েছে: " + error.message;
-      msgBox.className = "text-center font-bold mt-4 text-red-500";
-    });
+    let itemsHtml = order.items.map((i, index) => `
+      <div class="flex flex-col md:flex-row gap-3 items-start md:items-center p-3 bg-white border border-gray-100 rounded-xl mt-2 shadow-sm">
+        <div class="flex items-center gap-3 flex-1">
+          <img src="${i.image || i.thumbnail_image}" class="w-14 h-14 object-cover rounded-lg border">
+          <div>
+            <p class="font-bold text-sm text-gray-800 line-clamp-1">${i.name}</p>
+            <p class="text-xs text-gray-500 font-bold">কোড: ${i.id} ${i.variantText ? '| '+i.variantText : ''}</p>
+            <p class="text-xs text-green-600 font-black">${i.qty||1}টি x ৳${i.price||i.myPrice}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+          <a href="${i.image || i.thumbnail_image}" target="_blank" download class="flex-1 md:flex-none text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-3 rounded-lg transition-colors">📸 ছবি দেখুন</a>
+          <a href="https://www.dumkol.com/product/${i.id}" target="_blank" class="flex-1 md:flex-none text-center bg-orange-100 hover:bg-orange-200 text-orange-700 text-xs font-bold py-2 px-3 rounded-lg transition-colors">🛒 ডুমকল লিংক</a>
+        </div>
+      </div>
+    `).join('');
+    
+    ordersHTML += `
+      <div class="${statusBg} p-5 rounded-2xl shadow-md border-l-4 flex flex-col gap-4 relative transition-colors duration-300">
+        
+        <!-- Header: Date & Status -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-gray-200/50 pb-3">
+          <p class="text-xs text-gray-500 font-bold">📅 ${date} <br> <span class="text-[10px] text-gray-400">Order ID: ${order.id}</span></p>
+          
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-gray-600">স্ট্যাটাস:</span>
+            <select onchange="updateStatus('${order.id}', this.value)" class="bg-white border border-gray-300 rounded-lg px-2 py-1 text-sm font-bold outline-none cursor-pointer">
+              <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>🔴 Pending</option>
+              <option value="Processing" ${status === 'Processing' ? 'selected' : ''}>🟡 Processing</option>
+              <option value="Completed" ${status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Customer Info & Copy Button -->
+        <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+          <div>
+            <h3 class="font-black text-lg text-gray-800">👤 ${order.customerName}</h3>
+            <p class="text-gray-700 font-bold text-sm">📞 ${order.customerPhone}</p>
+            <p class="text-gray-600 text-sm mt-1">📍 ${order.customerAddress}</p>
+          </div>
+          <button onclick="copyCustomerInfo('${order.customerName}', '${order.customerPhone}', '${order.customerAddress}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            তথ্য কপি করুন
+          </button>
+        </div>
+
+        <!-- Items -->
+        <div class="mt-2 bg-gray-50/50 rounded-xl p-2 border border-gray-100">
+          <p class="font-bold text-gray-700 text-sm ml-1 mb-1">অর্ডার করা পণ্য:</p>
+          ${itemsHtml}
+        </div>
+
+        <!-- Footer: Total & Delete -->
+        <div class="flex justify-between items-center mt-2 pt-3 border-t border-gray-200/50">
+          <button onclick="deleteOrder('${order.id}')" class="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors border border-red-100">🗑 ডিলিট</button>
+          <div class="text-right">
+            <p class="text-xs text-gray-500 font-bold">সর্বমোট বিল</p>
+            <p class="text-2xl font-black text-green-600">৳${order.totalAmount}</p>
+          </div>
+        </div>
+
+      </div>
+    `;
+  });
+  container.innerHTML = ordersHTML;
+}
+
+// --- Action Functions ---
+
+// 1. Update Order Status
+function updateStatus(orderId, newStatus) {
+  db.ref('orders/' + orderId).update({ status: newStatus }).then(() => {
+    showToast('স্ট্যাটাস আপডেট হয়েছে!');
+  });
+}
+
+// 2. Copy Customer Info
+function copyCustomerInfo(name, phone, address) {
+  const text = `নাম: ${name}\nফোন: ${phone}\nঠিকানা: ${address}`;
+  if(navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => showToast('তথ্য কপি হয়েছে!'));
+  } else {
+    // Fallback for older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('তথ্য কপি হয়েছে!');
+    } catch (err) {
+      alert("কপি করা যায়নি, ম্যানুয়ালি সিলেক্ট করে কপি করুন।\n\n" + text);
+    }
+    document.body.removeChild(textArea);
+  }
+}
+
+// 3. Delete Order
+function deleteOrder(orderId) {
+  if(confirm("আপনি কি নিশ্চিত যে এই অর্ডারটি ডিলিট করতে চান? এটি আর ফেরত পাওয়া যাবে না!")) {
+    db.ref('orders/' + orderId).remove();
+  }
+}
+
+// Custom Toast
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.innerText = message;
+  toast.classList.remove('opacity-0');
+  setTimeout(() => { toast.classList.add('opacity-0'); }, 2000);
 }
 </script>
 </body>
