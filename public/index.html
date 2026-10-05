@@ -6,107 +6,300 @@
 <title>Zolpai.com</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
-<style>body{font-family:'Hind Siliguri',sans-serif}</style>
+<style>
+  body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0fdf4; } /* হালকা সবুজ ব্যাকগ্রাউন্ড */
+</style>
 </head>
-<body class="bg-gray-50">
+<body class="pb-10">
 
 <script>
-// ★★★ এখানে আলাদা আলাদা লাভ দিন ★★★
-const PROFIT_BY_ID = {
-  1: 10,   
-  2: 100,  
-  5: 3,    
-};
-const DEFAULT_PROFIT = 20; // বাকি সব প্রোডাক্টে 20% লাভ
+// ★ লাভ সেট করুন 
+const PROFIT_BY_ID = { 1: 10, 2: 100, 5: 3 };
+const DEFAULT_PROFIT = 20; 
 
-// আপনার হোয়াটসঅ্যাপ নম্বর
+// ★ আপনার হোয়াটসঅ্যাপ নম্বর
 const WHATSAPP_NUMBER = "8801602100492"; 
 
-// ★★★ আপনার নতুন গুগল স্ক্রিপ্ট লিংক ★★★
+// ★ গুগল স্ক্রিপ্ট লিংক
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdjN7gVjmqVuaiIHngvVxwEDdfXEw__6i_OfE1Ev0V8s_JmMcwXYTIc_vK8zQ3LESO/exec";
 </script>
 
-<header class="bg-white shadow sticky top-0 z-50">
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-    <h1 class="text-2xl font-black text-green-600">Zolpai<span class="text-orange-500">.com</span></h1>
-    <input id="searchBox" placeholder="খুঁজুন..." class="border border-gray-300 rounded-full px-4 py-2 text-sm w-44 md:w-80 outline-none focus:border-green-500">
+    <div class="flex items-center gap-2 cursor-pointer" onclick="showCategories()">
+      <h1 class="text-2xl font-black text-green-700">Zolpai<span class="text-orange-500">.com</span></h1>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- Cart Icon -->
+      <button onclick="toggleCart()" class="relative p-2 bg-green-50 rounded-full hover:bg-green-100 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+        <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">0</span>
+      </button>
+    </div>
   </div>
 </header>
 
 <main class="max-w-7xl mx-auto px-4 py-6">
-  <div id="loading" class="text-center py-20 text-gray-500 font-semibold">লোড হচ্ছে...</div>
-  <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"></div>
+  <div id="loading" class="text-center py-20 text-gray-500 font-bold flex flex-col items-center">
+    <div class="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+    লোড হচ্ছে, দয়া করে অপেক্ষা করুন...
+  </div>
+  
+  <!-- ক্যাটাগরি গ্রিড ভিউ (শুরুতে এটি দেখাবে) -->
+  <div id="categoryView" class="hidden">
+    <h2 class="text-xl md:text-2xl font-black text-center text-gray-800 mb-6">আমাদের প্রোডাক্ট সমূহ</h2>
+    <div id="categoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- ক্যাটাগরি কার্ডগুলো এখানে আসবে -->
+    </div>
+  </div>
+
+  <!-- প্রোডাক্ট ভিউ (ক্যাটাগরিতে ক্লিক করলে এটি দেখাবে) -->
+  <div id="productView" class="hidden">
+    <div class="flex items-center justify-between mb-6 border-b border-green-200 pb-3">
+      <button onclick="showCategories()" class="text-green-700 hover:text-green-800 font-bold flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+        ফিরে যান
+      </button>
+      <h2 id="currentCategoryTitle" class="text-lg md:text-xl font-black text-gray-800">ক্যাটাগরি</h2>
+    </div>
+    
+    <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5">
+      <!-- প্রোডাক্টগুলো এখানে আসবে -->
+    </div>
+  </div>
 </main>
 
+<!-- Cart Modal -->
+<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden justify-end">
+  <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform translate-x-full duration-300" id="cartContent">
+    <div class="flex justify-between items-center p-4 border-b bg-gray-50">
+      <h2 class="text-lg font-bold text-gray-800">🛒 আপনার কার্ট</h2>
+      <button onclick="toggleCart()" class="text-gray-500 hover:text-red-500 bg-gray-200 rounded-full p-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <div id="cartItems" class="flex-1 overflow-y-auto p-4 space-y-4">
+      <!-- কার্ট আইটেম -->
+    </div>
+    <div class="p-4 border-t bg-white shadow-inner">
+      <div class="flex justify-between font-black text-lg mb-4">
+        <span>সর্বমোট বিল:</span>
+        <span id="cartTotal" class="text-green-600">৳0</span>
+      </div>
+      <button onclick="checkoutWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 active:scale-95 transition-transform text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 text-lg shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        অর্ডার কনফার্ম করুন
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-let allProducts=[];
+let allProducts = [];
+let categoryList = [];
+let cart = [];
 
 async function load(){
   try{
-    // গুগল স্ক্রিপ্ট থেকে ডেটা আসবে, তাই কোনো CORS Error হবে না
-    const res = await fetch(GOOGLE_SCRIPT_URL);
-
-    if(!res.ok) throw new Error("সার্ভার থেকে সঠিক রেসপন্স আসেনি!");
-
+    const res = await fetch(GOOGLE_SCRIPT_URL, { method: "GET", redirect: "follow" });
+    if(!res.ok) throw new Error("সার্ভার রেসপন্স করছে না!");
     const json = await res.json();
     
     if(json.result === true) {
-      allProducts = json.data || [];
+      allProducts = (json.data || []).map(p => {
+        const original = parseFloat(p.price||0);
+        const percent = PROFIT_BY_ID[p.id] !== undefined ? PROFIT_BY_ID[p.id] : DEFAULT_PROFIT;
+        p.myPrice = Math.round(original * (1 + percent/100));
+        p.category_name = p.category_name || 'অন্যান্য';
+        p.profitPercent = percent;
+        return p;
+      });
+      
+      extractCategories();
+      
+      document.getElementById('loading').style.display = 'none';
+      showCategories(); // প্রথমে ক্যাটাগরি পেজ লোড হবে
     } else {
-      throw new Error(json.message || "API থেকে ডেটা আসেনি");
+      throw new Error(json.message || "ডেটা আসেনি");
     }
-    
-    document.getElementById('loading').style.display='none';
-    render(allProducts);
   }catch(e){
     document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold">Error: '+e.message+'</span>';
   }
 }
 
-function render(list){
-  if(list.length === 0) {
-    document.getElementById('grid').innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">কোনো পণ্য পাওয়া যায়নি</div>';
-    return;
-  }
+// প্রোডাক্ট থেকে ক্যাটাগরি এবং ক্যাটাগরির ছবি বের করা
+function extractCategories() {
+  const catMap = new Map();
+  allProducts.forEach(p => {
+    if(!catMap.has(p.category_name)) {
+      // ক্যাটাগরির কভার হিসেবে ওই ক্যাটাগরির প্রথম প্রোডাক্টের ছবি রাখা হচ্ছে
+      catMap.set(p.category_name, p.thumbnail_image || 'https://via.placeholder.com/300');
+    }
+  });
+  categoryList = Array.from(catMap, ([name, image]) => ({ name, image }));
+}
 
-  document.getElementById('grid').innerHTML = list.map(p=>{
-    const original = parseFloat(p.price||0);
-    const percent = PROFIT_BY_ID[p.id] !== undefined ? PROFIT_BY_ID[p.id] : DEFAULT_PROFIT;
-    const myPrice = Math.round(original * (1 + percent/100));
-    const catName = p.category_name || 'পণ্য';
-    
-    const cleanName = (p.name || '').replace(/'/g, "").replace(/"/g, "");
-
-    return `<div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100 overflow-hidden group">
-      <div class="relative overflow-hidden bg-gray-100">
-        <img src="${p.thumbnail_image || 'https://via.placeholder.com/300'}" class="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500">
-        <span class="absolute top-2 left-2 text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold shadow">+${percent}%</span>
+// ক্যাটাগরি পেজ দেখানো
+function showCategories() {
+  document.getElementById('productView').classList.add('hidden');
+  document.getElementById('categoryView').classList.remove('hidden');
+  
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = categoryList.map(cat => `
+    <div onclick="showCategoryProducts('${cat.name.replace(/'/g, "\\'")}')" class="bg-white rounded-xl shadow hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-100 flex flex-col items-center p-3 text-center">
+      <div class="w-24 h-24 mb-3 rounded-full overflow-hidden bg-green-50 border-4 border-green-100">
+        <img src="${cat.image}" class="w-full h-full object-cover">
       </div>
-      <div class="p-4">
-        <p class="text-[10px] text-gray-500 mb-1">${catName}</p>
-        <h3 class="font-semibold text-gray-800 text-sm h-10 line-clamp-2 leading-tight">${p.name}</h3>
-        <div class="flex justify-between items-end mt-4">
-          <div>
-            <p class="text-xs line-through text-gray-400 mb-0.5">৳${original}</p>
-            <p class="font-bold text-lg text-green-600 leading-none">৳${myPrice}</p>
-          </div>
-          <button onclick="orderProduct('${cleanName}', ${myPrice})" class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-md">অর্ডার</button>
+      <h3 class="font-bold text-gray-800 text-sm md:text-base">${cat.name}</h3>
+    </div>
+  `).join('');
+}
+
+// নির্দিষ্ট ক্যাটাগরির প্রোডাক্ট দেখানো
+function showCategoryProducts(categoryName) {
+  document.getElementById('categoryView').classList.add('hidden');
+  document.getElementById('productView').classList.remove('hidden');
+  document.getElementById('currentCategoryTitle').innerText = categoryName;
+  
+  const products = allProducts.filter(p => p.category_name === categoryName);
+  const grid = document.getElementById('productGrid');
+  
+  grid.innerHTML = products.map(p => {
+    const imgUrl = p.thumbnail_image || 'https://via.placeholder.com/300';
+    return `
+    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col">
+      <div class="relative overflow-hidden bg-gray-50 aspect-square">
+        <img src="${imgUrl}" loading="lazy" class="h-full w-full object-cover">
+        <span class="absolute top-2 left-2 text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold shadow">+${p.profitPercent}%</span>
+      </div>
+      <div class="p-3 flex flex-col flex-1">
+        <h3 class="font-semibold text-gray-800 text-xs md:text-sm h-9 md:h-10 line-clamp-2 leading-tight mb-2">${p.name}</h3>
+        <div class="flex items-center gap-2 mb-3 mt-auto">
+          <p class="font-bold text-base md:text-lg text-green-600 leading-none">৳${p.myPrice}</p>
+          <p class="text-[10px] md:text-xs line-through text-gray-400">৳${p.price}</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button onclick="addToCart(${p.id}, this)" class="w-full border border-green-500 text-green-700 bg-green-50 hover:bg-green-100 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+             🛒 কার্টে যোগ করুন
+          </button>
+          <button onclick="buyNow(${p.id})" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+             ⚡ অর্ডার করুন
+          </button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function orderProduct(productName, price) {
-  const message = `হ্যালো, আমি আপনাদের সাইট থেকে একটি অর্ডার করতে চাই:\n\nপণ্য: ${productName}\nদাম: ৳${price}`;
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  window.open(whatsappUrl, '_blank');
+// --- কার্ট সিস্টেম ---
+function addToCart(id, btnElement) {
+  const p = allProducts.find(item => item.id === id);
+  if(!p) return;
+  
+  const existing = cart.find(item => item.id === id);
+  if(existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id: p.id, name: p.name, price: p.myPrice, image: p.thumbnail_image, qty: 1 });
+  }
+  updateCartUI();
+  
+  const originalText = btnElement.innerHTML;
+  btnElement.innerHTML = '✔ যোগ হয়েছে!';
+  btnElement.classList.replace('text-green-700', 'text-white');
+  btnElement.classList.replace('bg-green-50', 'bg-green-600');
+  
+  setTimeout(() => {
+    btnElement.innerHTML = originalText;
+    btnElement.classList.replace('text-white', 'text-green-700');
+    btnElement.classList.replace('bg-green-600', 'bg-green-50');
+  }, 1000);
+
+  document.getElementById('cartCount').classList.add('animate-bounce');
+  setTimeout(() => document.getElementById('cartCount').classList.remove('animate-bounce'), 1000);
 }
 
-document.getElementById('searchBox').addEventListener('input', e=>{
-  const q=e.target.value.toLowerCase();
-  render(allProducts.filter(p=>p.name.toLowerCase().includes(q)));
-});
+function updateCartQty(id, change) {
+  const item = cart.find(i => i.id === id);
+  if(item) {
+    item.qty += change;
+    if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    updateCartUI();
+  }
+}
+
+function updateCartUI() {
+  document.getElementById('cartCount').innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+  const container = document.getElementById('cartItems');
+  
+  if(cart.length === 0) {
+    container.innerHTML = '<div class="text-center text-gray-400 mt-20 font-bold">আপনার কার্ট খালি!</div>';
+    document.getElementById('cartTotal').innerText = '৳0';
+    return;
+  }
+  
+  let total = 0;
+  container.innerHTML = cart.map(item => {
+    total += item.price * item.qty;
+    return `
+    <div class="flex gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+      <img src="${item.image}" class="w-16 h-16 object-cover rounded-md bg-gray-50 border">
+      <div class="flex-1 flex flex-col justify-between">
+        <h4 class="text-xs font-semibold text-gray-800 line-clamp-2">${item.name}</h4>
+        <div class="flex justify-between items-center mt-2">
+          <span class="text-sm font-black text-green-600">৳${item.price}</span>
+          <div class="flex items-center border rounded-lg bg-gray-50">
+            <button onclick="updateCartQty(${item.id}, -1)" class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded-l-lg font-bold">-</button>
+            <span class="px-2 text-xs font-bold">${item.qty}</span>
+            <button onclick="updateCartQty(${item.id}, 1)" class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded-r-lg font-bold">+</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('cartTotal').innerText = `৳${total}`;
+}
+
+function toggleCart() {
+  const modal = document.getElementById('cartModal');
+  const content = document.getElementById('cartContent');
+  if(modal.classList.contains('hidden')) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => content.classList.remove('translate-x-full'), 10);
+  } else {
+    content.classList.add('translate-x-full');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }, 300);
+  }
+}
+
+// --- হোয়াটসঅ্যাপে অর্ডার ---
+function buyNow(id) {
+  const p = allProducts.find(item => item.id === id);
+  if(!p) return;
+  const msg = `হ্যালো, আমি একটি অর্ডার করতে চাই:\n\nপণ্য: ${p.name}\nদাম: ৳${p.myPrice}\nছবির লিংক: ${p.thumbnail_image}`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function checkoutWhatsApp() {
+  if(cart.length === 0) return alert('আপনার কার্ট খালি!');
+  
+  let msg = `হ্যালো, আমি নিচের পণ্যগুলো অর্ডার করতে চাই:\n\n`;
+  let total = 0;
+  
+  cart.forEach((item, i) => {
+    msg += `${i+1}. ${item.name}\nপরিমাণ: ${item.qty} টি\nদাম: ৳${item.price * item.qty}\nছবির লিংক: ${item.image}\n\n`;
+    total += item.price * item.qty;
+  });
+  
+  msg += `------------------\n*সর্বমোট বিল: ৳${total}*`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+}
 
 load();
 </script>
