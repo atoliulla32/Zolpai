@@ -46,7 +46,8 @@
   .glass-header { background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(10px); }
   
   /* 3D Button Press Effect */
-  .btn-3d:active { transform: translateY(2px); box-shadow: inset 0 3px 5px rgba(0,0,0,0.12); }
+  .btn-3d { transition: all 0.2s ease; }
+  .btn-3d:active { transform: translateY(2px); box-shadow: inset 0 3px 5px rgba(0,0,0,0.12) !important; }
 </style>
 </head>
 <body class="pb-24 text-gray-800">
@@ -117,7 +118,17 @@ const TELEGRAM_CHAT_ID = "-1003577156944";
       <button onclick="showCategories()" class="text-gray-600 font-bold flex items-center gap-1.5 bg-white border border-gray-200 px-4 py-2 rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.05)] hover:shadow-md hover:-translate-x-1 transition-all btn-3d"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>ব্যাক</button>
       <h2 id="currentCategoryTitle" class="text-xl md:text-2xl font-black text-gray-800">ক্যাটাগরি</h2>
     </div>
+    
+    <!-- Product Grid -->
     <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-5"></div>
+    
+    <!-- Load More Button -->
+    <div id="loadMoreContainer" class="text-center mt-10 hidden">
+      <button id="loadMoreBtn" onclick="loadMoreProducts()" class="bg-white border-2 border-green-500 text-green-600 hover:bg-green-50 font-bold py-3.5 px-8 rounded-full shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto btn-3d">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+        আরও দেখুন
+      </button>
+    </div>
   </div>
 </main>
 
@@ -127,7 +138,7 @@ const TELEGRAM_CHAT_ID = "-1003577156944";
   <span class="cart-count absolute 0 -top-1.5 -right-1.5 bg-gradient-to-b from-red-500 to-red-600 text-white text-[11px] font-bold h-5.5 w-5.5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">0</span>
 </button>
 
-<!-- ★ Quick View Modal ★ -->
+<!-- ★ Quick View Modal (With Share & Copy Buttons) ★ -->
 <div id="quickViewModal" class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[60] hidden justify-center items-center p-4 transition-opacity">
   <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col max-h-[95vh] transform scale-95 duration-300 overflow-hidden relative border border-gray-100" id="quickViewContent">
     <button onclick="closeQuickView()" class="absolute top-4 right-4 bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2 shadow-md z-50 transition-colors border border-gray-100 btn-3d"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -142,7 +153,20 @@ const TELEGRAM_CHAT_ID = "-1003577156944";
       </div>
       
       <div class="w-full md:w-7/12 flex flex-col pt-2 md:pt-4">
-        <h3 class="font-black text-gray-800 text-xl md:text-2xl mb-4 pr-10 leading-tight" id="qvTitle">বিস্তারিত</h3>
+        
+        <!-- ★ Title & Share/Copy Icons ★ -->
+        <div class="flex justify-between items-start gap-4 mb-4">
+          <h3 class="font-black text-gray-800 text-xl md:text-2xl leading-tight" id="qvTitle">বিস্তারিত</h3>
+          <div class="flex gap-2 shrink-0 mr-8 md:mr-0">
+            <button onclick="copyProductLink()" class="p-2.5 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-green-600 rounded-xl transition-all btn-3d shadow-sm" title="লিংক কপি">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            </button>
+            <button onclick="shareProduct()" class="p-2.5 bg-green-50 border border-green-200 text-green-600 hover:bg-green-100 hover:text-green-700 rounded-xl transition-all btn-3d shadow-sm" title="শেয়ার করুন">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            </button>
+          </div>
+        </div>
+
         <div class="flex items-end gap-3 mb-6 pb-6 border-b border-gray-100 relative">
           <p id="qvPrice" class="font-black text-4xl text-green-600 tracking-tight"></p>
           <p id="qvOldPrice" class="text-base line-through text-gray-400 mb-1"></p>
@@ -153,13 +177,11 @@ const TELEGRAM_CHAT_ID = "-1003577156944";
           <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> পণ্যের বিবরণ:
           </h4>
-          
           <div class="relative flex-1 group">
             <div class="bg-gray-50 border border-gray-200/60 rounded-2xl p-5 h-56 md:h-64 overflow-y-auto shadow-inner relative z-10 custom-scrollbar">
               <div id="qvDesc" class="desc-html pb-8"></div>
             </div>
             <div class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none rounded-b-2xl z-20"></div>
-            <!-- Scroll Hint Text -->
             <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30 text-[10px] text-gray-600 font-bold bg-white/95 backdrop-blur border border-gray-200 px-4 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-pulse transition-opacity duration-300 group-hover:opacity-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
               স্ক্রল করে পড়ুন
@@ -225,9 +247,11 @@ let customFirebasePrices = {};
 let pendingAction = null, pendingProduct = null, availableVariantKeys = [];
 let currentCheckoutType = 'cart', directOrderProduct = null;
 
-const formatPrice = (price) => new Intl.NumberFormat('en-IN').format(price);
+let currentFilteredProducts = [];
+let currentDisplayIndex = 0;
+const ITEMS_PER_PAGE = 20;
 
-// ★ Background Scroll Lock Fix ★
+const formatPrice = (price) => new Intl.NumberFormat('en-IN').format(price);
 function toggleBodyScroll(lock) { document.body.style.overflow = lock ? 'hidden' : ''; }
 
 db.ref('custom_prices').on('value', (snapshot) => {
@@ -241,7 +265,18 @@ async function load(){
     const res = await fetch(GOOGLE_SCRIPT_URL, { method: "GET", redirect: "follow" });
     if(!res.ok) throw new Error("সার্ভার রেসপন্স করছে না!");
     const json = await res.json();
-    if(json.result === true) { gasData = json.data || []; processAndRenderData(); document.getElementById('loading').style.display = 'none'; }
+    if(json.result === true) { 
+      gasData = json.data || []; 
+      processAndRenderData(); 
+      document.getElementById('loading').style.display = 'none'; 
+      
+      // ★ Check URL for specific product ID on Load ★
+      setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pid = urlParams.get('product_id');
+        if(pid) openQuickView(parseInt(pid));
+      }, 500);
+    }
   }catch(e){
     document.getElementById('loading').innerHTML = '<span class="text-red-500 font-bold bg-red-50 px-5 py-3 rounded-xl border border-red-100 shadow-sm">Error: '+e.message+'</span>';
   }
@@ -253,11 +288,12 @@ function processAndRenderData() {
     p.myPrice = finalSalePrice; p.discountPercent = Math.round(((p.oldPrice - finalSalePrice) / p.oldPrice) * 100); return p;
   });
   extractCategories();
+  
   const searchInputs = [document.getElementById('searchBox'), document.getElementById('searchBoxMobile')];
   const currentQ = searchInputs.find(input => input.value)?.value.toLowerCase();
   
-  if(currentQ) renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(currentQ) || p.category_name.toLowerCase().includes(currentQ)));
-  else if (!document.getElementById('productView').classList.contains('hidden')) renderProducts(allProducts.filter(p => p.category_name === document.getElementById('currentCategoryTitle').innerText));
+  if(currentQ) initProductView(allProducts.filter(p => p.name.toLowerCase().includes(currentQ) || p.category_name.toLowerCase().includes(currentQ)));
+  else if (!document.getElementById('productView').classList.contains('hidden')) initProductView(allProducts.filter(p => p.category_name === document.getElementById('currentCategoryTitle').innerText));
   else showCategories(); 
 }
 
@@ -279,21 +315,41 @@ function showCategories() {
 
 function showCategoryProducts(categoryName) {
   document.getElementById('categoryView').classList.add('hidden'); document.getElementById('productView').classList.remove('hidden'); document.getElementById('currentCategoryTitle').innerText = categoryName;
-  renderProducts(allProducts.filter(p => p.category_name === categoryName));
+  initProductView(allProducts.filter(p => p.category_name === categoryName));
 }
 
-function renderProducts(products) {
-  const grid = document.getElementById('productGrid');
-  if(products.length === 0) return grid.innerHTML = '<div class="col-span-full text-center py-16 font-bold bg-white rounded-3xl border border-gray-100 shadow-sm text-gray-500">কোনো পণ্য পাওয়া যায়নি</div>';
-  grid.innerHTML = products.map((p, i) => `
+const handleSearch = (e) => {
+  const q = e.target.value.toLowerCase();
+  document.getElementById(e.target.id === 'searchBox' ? 'searchBoxMobile' : 'searchBox').value = q;
+  if(!q) return showCategories();
+  document.getElementById('categoryView').classList.add('hidden'); document.getElementById('productView').classList.remove('hidden'); document.getElementById('currentCategoryTitle').innerText = 'সার্চ রেজাল্ট';
+  initProductView(allProducts.filter(p => p.name.toLowerCase().includes(q) || p.category_name.toLowerCase().includes(q)));
+};
+document.getElementById('searchBox').addEventListener('input', handleSearch);
+document.getElementById('searchBoxMobile').addEventListener('input', handleSearch);
+
+function initProductView(products) {
+  currentFilteredProducts = products;
+  currentDisplayIndex = 0;
+  document.getElementById('productGrid').innerHTML = '';
+  
+  if(products.length === 0) {
+    document.getElementById('loadMoreContainer').classList.add('hidden');
+    document.getElementById('productGrid').innerHTML = '<div class="col-span-full text-center py-16 font-bold bg-white rounded-3xl border border-gray-100 shadow-sm text-gray-500">কোনো পণ্য পাওয়া যায়নি</div>';
+    return;
+  }
+  loadMoreProducts();
+}
+
+function renderProductCards(productsBatch) {
+  return productsBatch.map((p, i) => `
     <div class="bg-white rounded-3xl shadow-[0_5px_15px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.1)] transform hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col cursor-pointer group overflow-hidden animate-fade-up relative" style="animation-delay: ${(i%10)*0.05}s" onclick="openQuickView(${p.id})">
       <div class="relative overflow-hidden bg-gray-50 aspect-square flex items-center justify-center">
         <img src="${p.thumbnail_image || 'https://via.placeholder.com/300'}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
         <span class="absolute top-3 left-3 text-[10px] bg-red-500 text-white border border-red-400 px-2.5 py-1 rounded-full font-bold shadow-md z-10">-${p.discountPercent}%</span>
         <span class="absolute top-3 right-3 text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full font-bold shadow-sm z-10">কোড: ${p.id}</span>
         
-        <!-- ★ VIP "বিস্তারিত দেখুন" Button (Mobile always on, Desktop hover) ★ -->
-        <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur shadow-md border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-hover:-translate-y-1 transition-all duration-300 z-20 whitespace-nowrap">
+        <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur shadow-md border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-hover:-translate-y-1 transition-all duration-300 z-20 whitespace-nowrap btn-3d">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
           বিস্তারিত দেখুন
         </div>
@@ -312,22 +368,42 @@ function renderProducts(products) {
     </div>`).join('');
 }
 
-const handleSearch = (e) => {
-  const q = e.target.value.toLowerCase();
-  document.getElementById(e.target.id === 'searchBox' ? 'searchBoxMobile' : 'searchBox').value = q;
-  if(!q) return showCategories();
-  document.getElementById('categoryView').classList.add('hidden'); document.getElementById('productView').classList.remove('hidden'); document.getElementById('currentCategoryTitle').innerText = 'সার্চ রেজাল্ট';
-  renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(q) || p.category_name.toLowerCase().includes(q)));
-};
-document.getElementById('searchBox').addEventListener('input', handleSearch);
-document.getElementById('searchBoxMobile').addEventListener('input', handleSearch);
+function loadMoreProducts() {
+  const btn = document.getElementById('loadMoreBtn');
+  if(btn) btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> লোড হচ্ছে...';
+  
+  setTimeout(() => {
+    const nextBatch = currentFilteredProducts.slice(currentDisplayIndex, currentDisplayIndex + ITEMS_PER_PAGE);
+    document.getElementById('productGrid').insertAdjacentHTML('beforeend', renderProductCards(nextBatch));
+    currentDisplayIndex += ITEMS_PER_PAGE;
+    
+    const container = document.getElementById('loadMoreContainer');
+    if(currentDisplayIndex < currentFilteredProducts.length) {
+      container.classList.remove('hidden');
+      if(btn) btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg> আরও দেখুন';
+    } else {
+      container.classList.add('hidden');
+    }
+  }, 200);
+}
 
+// ★ Open Quick View & Update URL ★
 function openQuickView(id) {
-  const p = allProducts.find(item => item.id === id); if(!p) return;
-  document.getElementById('qvTitle').innerText = p.name; document.getElementById('qvImage').src = p.thumbnail_image; document.getElementById('qvCode').innerText = `কোড: ${p.id}`;
-  document.getElementById('qvPrice').innerText = `৳${formatPrice(p.myPrice)}`; document.getElementById('qvOldPrice').innerText = `৳${formatPrice(p.oldPrice)}`;
-  document.getElementById('qvDiscountBadge').innerText = `সেভ ৳${formatPrice(p.oldPrice - p.myPrice)}`; document.getElementById('qvDesc').innerHTML = p.description || '<p>কোনো বিবরণ নেই।</p>';
+  const p = allProducts.find(item => item.id == id); if(!p) return;
+  
+  // Set Product ID in URL without reloading
+  const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?product_id=' + p.id;
+  window.history.pushState({path:newUrl}, '', newUrl);
+
+  document.getElementById('qvTitle').innerText = p.name; 
+  document.getElementById('qvImage').src = p.thumbnail_image; 
+  document.getElementById('qvCode').innerText = `কোড: ${p.id}`;
+  document.getElementById('qvPrice').innerText = `৳${formatPrice(p.myPrice)}`; 
+  document.getElementById('qvOldPrice').innerText = `৳${formatPrice(p.oldPrice)}`;
+  document.getElementById('qvDiscountBadge').innerText = `সেভ ৳${formatPrice(p.oldPrice - p.myPrice)}`; 
+  document.getElementById('qvDesc').innerHTML = p.description || '<p>কোনো বিবরণ নেই।</p>';
   document.getElementById('qvActions').innerHTML = `<button onclick="handleAction(${p.id}, 'cart'); closeQuickView();" class="flex-1 border-2 border-green-500 text-green-600 bg-green-50 hover:bg-green-100 font-bold py-3.5 rounded-2xl text-sm transition-all shadow-sm btn-3d">🛒 কার্টে যোগ</button><button onclick="handleAction(${p.id}, 'buy'); closeQuickView();" class="flex-1 bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-bold py-3.5 rounded-2xl shadow-[0_4px_12px_rgba(249,115,22,0.3)] text-sm transition-all border border-orange-500 btn-3d">⚡ দ্রুত অর্ডার</button>`;
+  
   const gallery = document.getElementById('qvGallery');
   if(p.gallery_image && p.gallery_image.length > 0) {
     let images = [p.thumbnail_image, ...p.gallery_image];
@@ -339,14 +415,57 @@ function openQuickView(id) {
   const modal = document.getElementById('quickViewModal'); const content = document.getElementById('quickViewContent');
   modal.classList.remove('hidden'); modal.classList.add('flex'); setTimeout(() => { modal.classList.add('opacity-100'); content.classList.replace('scale-95', 'scale-100'); }, 10);
 }
+
+// ★ Close Quick View & Revert URL ★
 function closeQuickView() { 
+  const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+  window.history.pushState({path:cleanUrl}, '', cleanUrl);
+
   const modal = document.getElementById('quickViewModal'); const content = document.getElementById('quickViewContent');
   modal.classList.remove('opacity-100'); content.classList.replace('scale-100', 'scale-95'); 
   setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); toggleBodyScroll(false); }, 300); 
 }
 
+// ★ Copy & Native Share Functions ★
+function copyProductLink() {
+  const url = window.location.href;
+  if(navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(() => showToast('লিংক কপি করা হয়েছে!', 'success'));
+  } else {
+    // Fallback for older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = url;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try { document.execCommand('copy'); showToast('লিংক কপি করা হয়েছে!', 'success'); } 
+    catch (err) { alert("কপি করা যায়নি, ম্যানুয়ালি কপি করুন।\n" + url); }
+    document.body.removeChild(textArea);
+  }
+}
+
+async function shareProduct() {
+  const url = window.location.href;
+  const title = document.getElementById('qvTitle').innerText;
+  
+  // Check if Web Share API is supported (Native Android/iOS Share)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: title,
+        text: 'Zolpai.com এ এই প্রোডাক্টটি দেখুন! 🔥',
+        url: url
+      });
+    } catch (err) {
+      console.log('Share canceled or failed', err);
+    }
+  } else {
+    // If share is not supported, fallback to copy
+    copyProductLink();
+  }
+}
+
 function handleAction(id, actionType) {
-  const p = allProducts.find(item => item.id === id); if(!p) return;
+  const p = allProducts.find(item => item.id == id); if(!p) return;
   if(p.product_type === 'variant' && p.variants && p.variants.length > 0) openVariantModal(p, actionType);
   else { if(actionType === 'cart') finalizeAddToCart(p, ''); else triggerCheckoutDirect(p, ''); }
 }
@@ -429,7 +548,6 @@ function updateCartUI() {
           </div>
         </div>
       </div>
-      <!-- ★ Delete Button (Trash Icon) ★ -->
       <button onclick="removeFromCart('${item.cartId}')" class="absolute top-4 right-3 text-red-300 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all" title="ডিলিট করুন">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
       </button>
@@ -506,7 +624,7 @@ async function submitOrderToDB() {
     closeCheckout(); showToast("🎉 আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে!", "success");
     document.getElementById('custName').value = ''; document.getElementById('custPhone').value = ''; document.getElementById('custAddress').value = '';
     if(currentCheckoutType === 'cart') { cart = []; saveCart(); }
-  } catch(e) { showToast("সমস্যা হয়েছে! আবার চেষ্টা করুন।", "error"); } finally { btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> ওয়েবসাইটেই অর্ডার করুন`; btn.disabled = false; }
+  } catch(e) { showToast("সমস্যা হয়েছে! আবার চেষ্টা করুন।", "error"); } finally { btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg> ওয়েবসাইটেই অর্ডার করুন`; btn.disabled = false; }
 }
 
 function submitOrderToWhatsApp() {
