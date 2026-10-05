@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Zolpai</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<style> body { font-family: 'Hind Siliguri', sans-serif; } </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+<div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+  <h2 class="text-2xl font-black text-green-700 mb-6 text-center">নতুন দাম সেট করুন</h2>
+  
+  <div class="space-y-4">
+    <div>
+      <label class="block text-sm font-bold text-gray-700 mb-1">প্রোডাক্ট কোড (ID)</label>
+      <input type="number" id="productId" placeholder="যেমন: 9609" class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-green-500 outline-none">
+    </div>
+    
+    <div>
+      <label class="block text-sm font-bold text-gray-700 mb-1">নতুন সেল প্রাইস (৳)</label>
+      <input type="number" id="newPrice" placeholder="নতুন দাম লিখুন" class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:border-green-500 outline-none">
+    </div>
+
+    <button onclick="updatePrice()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl mt-4 transition-colors shadow-md">
+      দাম আপডেট করুন
+    </button>
+  </div>
+
+  <p id="message" class="text-center font-bold mt-4"></p>
+</div>
+
+<script>
+// আপনার ফায়ারবেস কনফিগারেশন
+const firebaseConfig = {
+  apiKey: "AIzaSyDmhKNr1boldjyzfmiBW3kmqvj6uuw1JkQ",
+  authDomain: "zolpai.firebaseapp.com",
+  projectId: "zolpai",
+  storageBucket: "zolpai.firebasestorage.app",
+  messagingSenderId: "277601431495",
+  appId: "1:277601431495:web:a9787485f2274e8edbb3e2",
+  measurementId: "G-QE8MFBCXT4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function updatePrice() {
+  const id = document.getElementById('productId').value;
+  const price = document.getElementById('newPrice').value;
+  const msgBox = document.getElementById('message');
+
+  if(!id || !price) {
+    msgBox.innerText = "দয়া করে কোড এবং দাম দুটোই লিখুন!";
+    msgBox.className = "text-center font-bold mt-4 text-red-500";
+    return;
+  }
+
+  msgBox.innerText = "আপডেট হচ্ছে...";
+  msgBox.className = "text-center font-bold mt-4 text-gray-500";
+
+  // ফায়ারবেসে দাম পাঠানো হচ্ছে
+  db.ref('custom_prices/' + id).set(price)
+    .then(() => {
+      msgBox.innerText = "✅ দাম সফলভাবে আপডেট হয়েছে!";
+      msgBox.className = "text-center font-bold mt-4 text-green-600";
+      
+      // সফল হলে ইনপুট বক্স ফাঁকা করে দেওয়া
+      document.getElementById('productId').value = '';
+      document.getElementById('newPrice').value = '';
+      
+      // ৩ সেকেন্ড পর মেসেজটি মুছে ফেলা
+      setTimeout(() => { msgBox.innerText = ''; }, 3000);
+    })
+    .catch((error) => {
+      msgBox.innerText = "❌ সমস্যা হয়েছে: " + error.message;
+      msgBox.className = "text-center font-bold mt-4 text-red-500";
+    });
+}
+</script>
+</body>
+</html>
